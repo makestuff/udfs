@@ -5,14 +5,14 @@
 	ddrb = $FE62
 	pcr = $FE6C
 	ifr = $FE6D
-	zp = $70
-	channel = 0
-	command = 1
-	param1 = 2
-	param2 = 3
-	send_length = 4
-	send_addr = 6
-	recv_addr = 8
+	base = $70
+	channel = base+0
+	command = base+1
+	param1 = base+2
+	param2 = base+3
+	send_length = base+4
+	send_addr = base+6
+	recv_addr = base+8
 	line = $f2
 	OSASCI = $FFE3
 	
@@ -115,36 +115,36 @@ upcomm	lda (line),y
 
 	jsr chomp
 	jsr get_byte	; command
-	sta zp+command
+	sta command
 
 	jsr chomp
 	jsr get_byte	; param1
-	sta zp+param1
+	sta param1
 
 	jsr chomp
 	jsr get_byte	; param2
-	sta zp+param2
+	sta param2
 
 	jsr chomp
 	jsr get_byte	; send_length msb
-	sta zp+send_length+1
+	sta send_length+1
 	jsr get_byte	; send_length lsb
-	sta zp+send_length
+	sta send_length
 	
 	jsr chomp
 	jsr get_byte	; send_addr msb
-	sta zp+send_addr+1
+	sta send_addr+1
 	jsr get_byte	; send_addr lsb
-	sta zp+send_addr
+	sta send_addr
 	
 	jsr chomp
 	jsr get_byte	; recv_addr msb
-	sta zp+recv_addr+1
+	sta recv_addr+1
 	jsr get_byte	; recv_addr lsb
-	sta zp+recv_addr
+	sta recv_addr
 
 	txa
-	sta zp+channel
+	sta channel
 
 	jsr send_msg
 	
@@ -183,57 +183,57 @@ send_msg	lda #$00
 	lda #$FF
 	sta ddrb	; Writing to AVR.
 	ldy #0
--	lda zp,y
+-	lda base,y
 	jsr send_byte
 	iny
 	cpy #6
 	bne -
-	ldy zp+send_length+1	; Get length high byte
+	ldy send_length+1	; Get length high byte
 	beq send_final_page
 	ldy #0
--	lda (zp+send_addr),y
+-	lda (send_addr),y
 	jsr send_byte
 	iny
 	bne -
-	inc zp+send_addr+1
-	dec zp+send_length+1
+	inc send_addr+1
+	dec send_length+1
 	bne -
 	beq send_final_page
--	lda (zp+send_addr),y
+-	lda (send_addr),y
 	jsr send_byte
 	iny
-send_final_page	cpy zp+send_length
+send_final_page	cpy send_length
 	bne -
 	ldy #$00
 	sty ddrb	; Reading from AVR.
 	jsr send_byte	; Tell AVR to send.
 	jsr send_byte	; Get AVR's status byte.
 	ldx drb	; Load it into X.
-	stx zp+channel	; Save status byte.
+	stx channel	; Save status byte.
 	jsr send_byte	; Get AVR's length low byte.
 	ldx drb	; Load it into X.
-	stx zp+param1	; Save it.
-	stx zp+send_length	; ...and in the counter.
+	stx param1	; Save it.
+	stx send_length	; ...and in the counter.
 	jsr send_byte	; Get AVR's length high byte.
 	ldx drb	; Load it into X.
-	stx zp+param2	; Save it first in out param block...
-	stx zp+send_length+1	; ...and in the counter.
+	stx param2	; Save it first in out param block...
+	stx send_length+1	; ...and in the counter.
 	beq recv_final_page
 -	jsr send_byte
 	lda drb
-	sta (zp+recv_addr),y
+	sta (recv_addr),y
 	iny
 	bne -
-	inc zp+recv_addr+1	; Inc addr high byte.
-	dec zp+param2	; Dec count high byte.
+	inc recv_addr+1	; Inc addr high byte.
+	dec param2	; Dec count high byte.
 	bne -
 	beq recv_final_page
 
 -	jsr send_byte
 	lda drb
-	sta (zp+recv_addr),y
+	sta (recv_addr),y
 	iny
-recv_final_page	cpy zp+param1	; Compare with count low byte.
+recv_final_page	cpy param1	; Compare with count low byte.
 	bne -
 	jsr send_byte	; Tell AVR to drop bus.
 	rts
