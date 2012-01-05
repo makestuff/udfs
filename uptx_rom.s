@@ -1,10 +1,10 @@
 	!to "uptx_rom.o", plain	; set output file and format
 
 	* = $8000
-	drb = $FE60
-	ddrb = $FE62
-	pcr = $FE6C
-	ifr = $FE6D
+	drb = $fe60
+	ddrb = $fe62
+	pcr = $fe6c
+	ifr = $fe6d
 	base = $380
 	channel = base+0
 	command = base+1
@@ -13,9 +13,10 @@
 	send_length = base+4
 	send_addr = base+6
 	recv_addr = base+8
+	dest_rom = base+9
 	data_ptr = $da
 	line = $f2
-	OSASCI = $FFE3
+	OSASCI = $ffe3
 	
 rom_start	!byte $00, $00, $00
 	jmp service
@@ -72,47 +73,9 @@ unrecognised_command	tya
 	lda #4
 	rts
 
-get_byte	iny
-	lda (line),y
-	jsr get_nibble
-	asl
-	asl
-	asl
-	asl
-	sta $70
-	iny
-	lda (line),y
-	jsr get_nibble
-	ora $70
-	rts
-
-get_nibble	cmp #'0'
-	bcc error
-	cmp #'0'+10
-	bcs try_alpha
-	sec
-	sbc #'0'
-	rts
-try_alpha	and #$df
-	cmp #'A'
-	bcc error
-	cmp #'G'
-	bcs error
-	sec
-	sbc #'A'-10
-	rts
-
-chomp	iny
-	lda (line),y
-	cmp #$20
-	bne error
-	rts
-
-upcomm	lda (line),y
-	cmp #$20
-	bne error
+upcomm	jsr chomp
 	jsr get_byte	; channel
-	tax
+	sta channel
 
 	jsr chomp
 	jsr get_byte	; command
@@ -144,28 +107,7 @@ upcomm	lda (line),y
 	jsr get_byte	; recv_addr lsb
 	sta recv_addr
 
-	txa
-	sta channel
-
-	jsr send_msg
-	
-	pla
-	tax
-	pla
-	tay
-	lda #0	; claim service call
-	rts
-
-error	ldx #$ff
--	inx
-	lda syntax,x
-	sta $0100,x
-	cmp #$ff
-	bne -
-	jmp $0100
-syntax	!text $00, $00, "Syntax: UPCOMM <ch> <cmd> <p1> <p2>", $0a, $0d, "               <rql> <rqa> <rsa>", $00, $ff
-
-send_msg	lda #$00
+	lda #$00
 	sta ddrb	; Reading from AVR.
 	lda #$C0
 	sta pcr	; Drive CB2 low.
@@ -245,6 +187,12 @@ send_final_page	cpy send_length
 recv_final_page	cpy param1	; Compare with count low byte.
 	bne -
 	jsr send_byte	; Tell AVR to drop bus.
+	
+	pla
+	tax
+	pla
+	tay
+	lda #0	; claim service call
 	rts
 
 send_byte	sta drb	; Send byte to AVR and strobe CB2.
@@ -252,3 +200,48 @@ send_byte	sta drb	; Send byte to AVR and strobe CB2.
 	and #$10	; Test bit CB1 (AVR acknowledge).
 	beq -	; Loop until CB1 set.
 	rts
+
+get_byte	lda (line),y
+	iny
+	jsr get_nibble
+	asl
+	asl
+	asl
+	asl
+	sta data_ptr
+	lda (line),y
+	iny
+	jsr get_nibble
+	ora data_ptr
+	rts
+
+get_nibble	cmp #'0'
+	bcc error
+	cmp #'0'+10
+	bcs try_alpha
+	sec
+	sbc #'0'
+	rts
+try_alpha	and #$df
+	cmp #'A'
+	bcc error
+	cmp #'G'
+	bcs error
+	sec
+	sbc #'A'-10
+	rts
+
+chomp	lda (line),y
+	iny
+	cmp #$20
+	bne error
+	rts
+
+error	ldx #$ff
+-	inx
+	lda syntax,x
+	sta $0100,x
+	cmp #$ff
+	bne -
+	jmp $0100
+syntax	!text $00, $00, "Syntax: UPCOMM <ch> <cmd> <p1> <p2>", $0a, $0d, "               <rql> <rqa> <rsa>", $00, $ff
