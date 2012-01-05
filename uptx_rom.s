@@ -5,7 +5,7 @@
 	ddrb = $FE62
 	pcr = $FE6C
 	ifr = $FE6D
-	base = $70
+	base = $380
 	channel = base+0
 	command = base+1
 	param1 = base+2
@@ -13,6 +13,7 @@
 	send_length = base+4
 	send_addr = base+6
 	recv_addr = base+8
+	data_ptr = $da
 	line = $f2
 	OSASCI = $FFE3
 	
@@ -168,6 +169,10 @@ send_msg	lda #$00
 	sta ddrb	; Reading from AVR.
 	lda #$C0
 	sta pcr	; Drive CB2 low.
+	lda send_addr
+	sta data_ptr
+	lda send_addr+1
+	sta data_ptr+1
 	nop
 	nop
 	nop
@@ -191,19 +196,23 @@ send_msg	lda #$00
 	ldy send_length+1	; Get length high byte
 	beq send_final_page
 	ldy #0
--	lda (send_addr),y
+-	lda (data_ptr),y
 	jsr send_byte
 	iny
 	bne -
-	inc send_addr+1
+	inc data_ptr+1
 	dec send_length+1
 	bne -
 	beq send_final_page
--	lda (send_addr),y
+-	lda (data_ptr),y
 	jsr send_byte
 	iny
 send_final_page	cpy send_length
 	bne -
+	lda recv_addr
+	sta data_ptr
+	lda recv_addr+1
+	sta data_ptr+1
 	ldy #$00
 	sty ddrb	; Reading from AVR.
 	jsr send_byte	; Tell AVR to send.
@@ -221,17 +230,17 @@ send_final_page	cpy send_length
 	beq recv_final_page
 -	jsr send_byte
 	lda drb
-	sta (recv_addr),y
+	sta (data_ptr),y
 	iny
 	bne -
-	inc recv_addr+1	; Inc addr high byte.
+	inc data_ptr+1	; Inc addr high byte.
 	dec param2	; Dec count high byte.
 	bne -
 	beq recv_final_page
 
 -	jsr send_byte
 	lda drb
-	sta (recv_addr),y
+	sta (data_ptr),y
 	iny
 recv_final_page	cpy param1	; Compare with count low byte.
 	bne -
