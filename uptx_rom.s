@@ -13,11 +13,13 @@
 	send_length = base+4
 	send_addr = base+6
 	recv_addr = base+8
-	dest_rom = base+9
+	dest_rom = base+10
+	store_byte = base+11
 	data_ptr = $da
 	line = $f2
 	OSASCI = $ffe3
-	
+	ROM = $fe30
+
 rom_start	!byte $00, $00, $00
 	jmp service
 	!byte $82, (copyright - rom_start), $00
@@ -102,13 +104,30 @@ upcomm	jsr chomp
 	sta send_addr
 	
 	jsr chomp
+	lda (line),y
+	cmp #'R'
+	bne +
+
+	iny		; get the rom number and set recv_addr to $8000
+	lda (line),y
+	iny
+	jsr get_nibble
+	sta dest_rom
+	lda #$80
+	sta recv_addr+1
+	lda #0
+	sta recv_addr
+	beq ++
+
++	lda ROM		; set rom number to current and get recv_addr
+	sta dest_rom
 	jsr get_byte	; recv_addr msb
 	sta recv_addr+1
 	jsr get_byte	; recv_addr lsb
 	sta recv_addr
 
 	lda #$00
-	sta ddrb	; Reading from AVR.
+++	sta ddrb	; Reading from AVR.
 	lda #$C0
 	sta pcr	; Drive CB2 low.
 	lda send_addr
@@ -155,6 +174,13 @@ send_final_page	cpy send_length
 	sta data_ptr
 	lda recv_addr+1
 	sta data_ptr+1
+	lda ROM
+	sta command
+	ldy #store_byte_end-store_byte_start
+-	lda store_byte_start-1,y
+	sta store_byte-1,y
+	dey
+	bne -
 	ldy #$00
 	sty ddrb	; Reading from AVR.
 	jsr send_byte	; Tell AVR to send.
@@ -172,7 +198,7 @@ send_final_page	cpy send_length
 	beq recv_final_page
 -	jsr send_byte
 	lda drb
-	sta (data_ptr),y
+	jsr store_byte
 	iny
 	bne -
 	inc data_ptr+1	; Inc addr high byte.
@@ -182,7 +208,7 @@ send_final_page	cpy send_length
 
 -	jsr send_byte
 	lda drb
-	sta (data_ptr),y
+	jsr store_byte
 	iny
 recv_final_page	cpy param1	; Compare with count low byte.
 	bne -
@@ -194,6 +220,14 @@ recv_final_page	cpy param1	; Compare with count low byte.
 	tay
 	lda #0	; claim service call
 	rts
+
+store_byte_start	ldx dest_rom
+	stx ROM
+	sta (data_ptr),y
+	ldx command
+	stx ROM
+	rts
+store_byte_end
 
 send_byte	sta drb	; Send byte to AVR and strobe CB2.
 -	lda ifr	; Load the interrupt flag register.
