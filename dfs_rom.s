@@ -1892,9 +1892,19 @@ rts_92a6	rts	; 0x92a6
 	pha	; 0x9322
 	lda #$ff	; 0x9323
 	sta $10de	; 0x9325
-	jsr prtstr	; 0x9328
-dfs_name	!text "Super MMC", $0d, $0d
+	jsr print_splash	; 0x9328
 	bcc $933b	; 0x9336
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
 cmd_disk	jmp mmc_cmd_disk	; 0x9338
 	lda #$00	; 0x933b
 	tsx	; 0x933d
@@ -3503,6 +3513,11 @@ set_leds	ldx #$06	; 0xa171
 reset_leds	lda #$76	; 0xa17b
 	jmp OSBYTE	; 0xa17d
 	ldx #$01	; 0xa180
+
+print_splash	jsr prtstr
+	!text "MakeStuff UDFS", $0d, $0d
+	nop
+	rts
 
 mmc_check	pha
 	lda #'A'
