@@ -790,11 +790,11 @@ cmdtxt_rename	!text "RENAME", $8a, "l", $87
 cmdtxt_title	!text "TITLE", $88, $a2, $0b
 cmdtxt_wipe	!text "WIPE", $86, $c2, $02, $b0, "&", $00
 cmdtxt_build	!text "BUILD", $9f, "G", $01
-cmdtxt_disc	!text "CARD", $93, "7", $00
+cmdtxt_disc	!text "UDFS", $93, "7", $00
 cmdtxt_dump	!text "DUMP", $9e, $cf, $01
 cmdtxt_list	!text "LIST", $9e, $8d, $01
 cmdtxt_type	!text "TYPE", $9e, $86, $01
-cmdtxt_disk	!text "DMMC", $93, "7", $00, $85, $b6, $00
+cmdtxt_disk	!text "UDFS", $93, "7", $00, $85, $b6, $00
 hlptxt_dfs	!text "DFS", $99, $c5, $00
 hlptxt_utils	!text "UTILS", $99, $ed, $00, $99, $f4, $00
 fscv3_unrecognised_cmd	jsr $86b8	; 0x866c
