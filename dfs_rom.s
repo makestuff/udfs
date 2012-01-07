@@ -3543,11 +3543,12 @@ mmc_read_block	pha
 	lda sector+0
 	sta zp+block_data+0
 	lda sector_count
+	ldx bytes_last_sector
+	stx zp+block_data+2
+	beq +
 	sec
 	sbc #1
-	sta zp+block_data+3
-	lda bytes_last_sector
-	sta zp+block_data+2
++	sta zp+block_data+3
 
 	; Setup command block
 	lda #0
