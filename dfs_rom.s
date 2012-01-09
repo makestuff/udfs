@@ -1,4 +1,4 @@
-	!to "dfs_rom.o", plain	; set output file and format
+	!to "dfs_rom.bin", plain	; set output file and format
 
 	* = $8000
 	data_ptr = $a0
@@ -794,7 +794,7 @@ cmdtxt_disc	!text "UDFS", $93, "7", $00
 cmdtxt_dump	!text "DUMP", $9e, $cf, $01
 cmdtxt_list	!text "LIST", $9e, $8d, $01
 cmdtxt_type	!text "TYPE", $9e, $86, $01
-cmdtxt_disk	!text "UDFS", $93, "7", $00, $85, $b6, $00
+cmdtxt_disk	!text "DISC", $93, "7", $00, $85, $b6, $00
 hlptxt_dfs	!text "DFS", $99, $c5, $00
 hlptxt_utils	!text "UTILS", $99, $ed, $00, $99, $f4, $00
 fscv3_unrecognised_cmd	jsr $86b8	; 0x866c
@@ -1985,7 +1985,10 @@ cmd_disk	jmp mmc_cmd_disk	; 0x9338
 	sty $10c8	; 0x93de
 	sty $10c7	; 0x93e1
 	sty $10de	; 0x93e4
-	jsr mmc_initialise	; 0x93e7
+	;jsr mmc_initialise	   ; 0x93e7
+	nop
+	nop
+	nop
 	jmp $9404	; 0x93ea
 	brk	; 0x93ed
 	brk	; 0x93ee
@@ -3516,10 +3519,13 @@ reset_leds	lda #$76	; 0xa17b
 
 print_splash	jsr prtstr
 	!text "MakeStuff UDFS", $0d, $0d
-	nop
-	rts
+	lda #0
+	tax
+	clc
+	jmp loaddisk
 
-mmc_check	pha
+mmc_check	rts
+	pha
 	lda #'A'
 	jsr OSWRCH
 	pla
@@ -3534,8 +3540,8 @@ mmc_read_block	pha
 	pha
 	tya
 	pha
-	lda #'C'
-	jsr OSWRCH
+	;lda #'C'
+	;jsr OSWRCH
 
 	; Setup parameter block
 	lda sector+1
@@ -3606,8 +3612,8 @@ mmc_read_cat	pha
 	tya
 	pha
 
-	lda #'D'
-	jsr OSWRCH
+	;lda #'D'
+	;jsr OSWRCH
 	
 
 ;	jsr OSNEWL
@@ -4379,7 +4385,12 @@ loaddisk	php	; 0xac1b
 	ora #$80	; 0xac9a
 	cmp cur_drv_cat	; 0xac9c
 	beq $ac97	; 0xac9f
-	sta cur_drv_cat	; 0xaca1
+
+loaddisktable
+	rts
+	nop
+	nop
+	;sta cur_drv_cat	; 0xaca1
 	pha	; 0xaca4
 	jsr mmc_check	; 0xaca5
 	pla	; 0xaca8
