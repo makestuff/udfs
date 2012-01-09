@@ -59,15 +59,15 @@
 	acr = $FE6B
 	pcr = $FE6C
 	ifr = $FE6D
-	zp = $0d42
-	channel = 0
-	command = 1
-	param1 = 2
-	param2 = 3
-	send_length = 4
-	send_addr = 6
-	recv_addr = 8
-	block_data = 10
+	base = $0d42
+	channel = base+0
+	command = base+1
+	param1 = base+2
+	param2 = base+3
+	send_length = base+4
+	send_addr = base+6
+	recv_addr = base+8
+	block_data = base+10
 	
 lang_entry	brk	; 0x8000
 	brk	; 0x8001
@@ -3545,35 +3545,35 @@ mmc_read_block	pha
 
 	; Setup parameter block
 	lda sector+1
-	sta zp+block_data+1
+	sta block_data+1
 	lda sector+0
-	sta zp+block_data+0
+	sta block_data+0
 	lda sector_count
 	ldx bytes_last_sector
-	stx zp+block_data+2
+	stx block_data+2
 	beq +
 	sec
 	sbc #1
-+	sta zp+block_data+3
++	sta block_data+3
 
 	; Setup command block
 	lda #0
-	sta zp+channel
-	sta zp+param1
-	sta zp+param2
-	sta zp+send_length+1
+	sta channel
+	sta param1
+	sta param2
+	sta send_length+1
 	lda #1
-	sta zp+command
+	sta command
 	lda #4
-	sta zp+send_length
-	lda #>(zp+block_data)
-	sta zp+send_addr+1
-	lda #<(zp+block_data)
-	sta zp+send_addr
+	sta send_length
+	lda #>block_data
+	sta send_addr+1
+	lda #<block_data
+	sta send_addr
 	lda data_ptr+1
-	sta zp+recv_addr+1
+	sta recv_addr+1
 	lda data_ptr
-	sta zp+recv_addr
+	sta recv_addr
 	jsr send_msg
 	
 	;lda #' '
@@ -3664,21 +3664,21 @@ mmc_read_cat	pha
 	sta $e00
 	sta $e01
 	sta $e02
-	sta zp+channel
-	sta zp+param1
-	sta zp+param2
-	sta zp+send_length+1
-	sta zp+send_addr
-	sta zp+recv_addr
+	sta channel
+	sta param1
+	sta param2
+	sta send_length+1
+	sta send_addr
+	sta recv_addr
 	lda #1
-	sta zp+command
+	sta command
 	lda #2
 	sta $e03
 	lda #4
-	sta zp+send_length
+	sta send_length
 	lda #$0e
-	sta zp+send_addr+1
-	sta zp+recv_addr+1
+	sta send_addr+1
+	sta recv_addr+1
 	jsr send_msg
 
 	pla
@@ -3739,9 +3739,9 @@ send_msg	lda pcr
 	pha
 	lda #0
 	sta acr
-	lda zp+send_addr
+	lda send_addr
 	sta data_ptr
-	lda zp+send_addr+1
+	lda send_addr+1
 	sta data_ptr+1
 	lda #$00
 	sta ddrb	; Reading from AVR.
@@ -3762,12 +3762,12 @@ send_msg	lda pcr
 	lda #$FF
 	sta ddrb	; Writing to AVR.
 	ldy #0
--	lda zp,y
+-	lda base,y
 	jsr send_byte
 	iny
 	cpy #6
 	bne -
-	ldy zp+send_length+1	; Get length high byte
+	ldy send_length+1	; Get length high byte
 	beq send_final_page
 	ldy #$00
 -	lda (data_ptr),y
@@ -3775,32 +3775,32 @@ send_msg	lda pcr
 	iny
 	bne -
 	inc data_ptr+1
-	dec zp+send_length+1
+	dec send_length+1
 	bne -
 	beq send_final_page
 -	lda (data_ptr),y
 	jsr send_byte
 	iny
-send_final_page	cpy zp+send_length
+send_final_page	cpy send_length
 	bne -
-	lda zp+recv_addr
+	lda recv_addr
 	sta data_ptr
-	lda zp+recv_addr+1
+	lda recv_addr+1
 	sta data_ptr+1
 	ldy #$00
 	sty ddrb	; Reading from AVR.
 	jsr send_byte	; Tell AVR to send.
 	jsr send_byte	; Get AVR's status byte.
 	ldx drb	; Load it into X.
-	stx zp+channel	; Save status byte.
+	stx channel	; Save status byte.
 	jsr send_byte	; Get AVR's length low byte.
 	ldx drb	; Load it into X.
-	stx zp+param1	; Save it.
-	stx zp+send_length	; ...and in the counter.
+	stx param1	; Save it.
+	stx send_length	; ...and in the counter.
 	jsr send_byte	; Get AVR's length high byte.
 	ldx drb	; Load it into X.
-	stx zp+param2	; Save it first in out param block...
-	stx zp+send_length+1	; ...and in the counter.
+	stx param2	; Save it first in out param block...
+	stx send_length+1	; ...and in the counter.
 	beq recv_final_page
 -	jsr send_byte
 	lda drb
@@ -3808,7 +3808,7 @@ send_final_page	cpy zp+send_length
 	iny
 	bne -
 	inc data_ptr+1	; Inc addr high byte.
-	dec zp+param2	; Dec count high byte.
+	dec param2	; Dec count high byte.
 	bne -
 	beq recv_final_page
 
@@ -3816,7 +3816,7 @@ send_final_page	cpy zp+send_length
 	lda drb
 	sta (data_ptr),y
 	iny
-recv_final_page	cpy zp+param1	; Compare with count low byte.
+recv_final_page	cpy param1	; Compare with count low byte.
 	bne -
 	jsr send_byte	; Tell AVR to drop bus.
 	pla
