@@ -1,4 +1,4 @@
-	!to "uptx_rom.o", plain	; set output file and format
+	!to "uptx_rom.bin", plain	; set output file and format
 
 	* = $8000
 	drb = $fe60
