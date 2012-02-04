@@ -18,16 +18,16 @@ code you need ACME[3], and for the AVR code you need AVR-GCC.
 
 The important code is in these three directories:
 
-udfs_rom - The ROM itself, in 6502 assembler.
-firmware - The USB cable AT90USB162 firmware.
-server   - The "disc image server" program.
+  udfs_rom - The ROM itself, in 6502 assembler.
+  firmware - The USB cable AT90USB162 firmware.
+  server   - The "disc image server" program.
 
 There's also some other code here which will probably be of no use to anyone,
 but which I don't want to lose, so I put it here:
 
-d6502    - Hacky disassembler to get an ACME-compatible MMBEEB ROM source file.
-uptx_rom - Simple sideways ROM for passing arbitrary commands to host over USB.
-xbm2bbc  - Image converter to make BBC MODE4 screen-memory dumps from XBM files.
+  d6502    - Hacky disassembler to get an ACME-compatible MMBEEB ROM source file.
+  uptx_rom - Simple sideways ROM for passing arbitrary commands to host over USB.
+  xbm2bbc  - Image converter to make BBC MODE4 screen-memory dumps from XBM files.
 
 
 HARDWARE
