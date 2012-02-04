@@ -13,9 +13,12 @@ TODO
 
 SOFTWARE
 
+You need the MakeStuff build infrastructure[2] to build the code. For the 6502
+code you need ACME[3], and for the AVR code you need AVR-GCC.
+
 The important code is in these three directories:
 
-udfs_rom - The ROM itself, in 6502 assembler (you need ACME[2] to assemble it).
+udfs_rom - The ROM itself, in 6502 assembler.
 firmware - The USB cable AT90USB162 firmware.
 server   - The "disc image server" program.
 
@@ -30,9 +33,9 @@ xbm2bbc  - Image converter to make BBC MODE4 screen-memory dumps from XBM files.
 HARDWARE
 
 For the USB cable you will need a board based on the Atmel AT90USB162 or
-similar. Probably the cheapest option is to buy a Minimus board[3], which will
+similar. Probably the cheapest option is to buy a Minimus board[4], which will
 cost about £5. Since you want the AT90USB162 to draw power from the Beeb, you
-need to cut the USB power line, as shown on the left in [4].
+need to cut the USB power line, as shown on the left in [5].
 
 You then need a 20-pin IDC connector and a short (~30cm) length of ribbon cable,
 connected like this:
@@ -75,6 +78,7 @@ Hit Shift-Break on the BBC and you're away!
 
 
 [1] http://swhs.home.xs4all.nl/bbc/mmbeeb/
-[2] http://www.esw-heim.tu-clausthal.de/~marco/smorbrod/acme/
-[3] http://www.ck3.co.uk/minimus-avr-usb-development-board.html
-[4] http://www.swaton.ukfsn.org/uploads/2012/02/minimusAVRISP2.jpg
+[2] http://www.makestuff.eu/wordpress/?page_id=1489
+[3] http://www.esw-heim.tu-clausthal.de/~marco/smorbrod/acme/
+[4] http://www.ck3.co.uk/minimus-avr-usb-development-board.html
+[5] http://www.swaton.ukfsn.org/uploads/2012/02/minimusAVRISP2.jpg
