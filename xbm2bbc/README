@@ -1,0 +1,16 @@
+A short program to convert an image in XBM format to a file suitable for loading
+into a BBC Micro's MODE4 screen memory. I used it for testing only and it is not
+necessary for UDFS to function.
+
+To generate an XBM from an image:
+
+1) Open the image in Gimp (http://www.gimp.org)
+2) Image->Scale Image to 320x256
+3) File->Save As->foo.xbm
+
+I have found that on most TVs and monitors, the BBC's relatively fast 16MHz
+pixel clock results in a quite wide horizontal blanking period, meaning that the
+addressable screen area appears to be roughly square on most TVs. To account for
+this, I tend to crop source images to be square first (i.e same number of pixels
+in the horizontal as in the vertical), then scale to 320x256, then save and
+convert.

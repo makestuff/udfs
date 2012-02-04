@@ -1,0 +1,31 @@
+The UPTX ROM is a sideways ROM written in 6502 assembler which offers a single
+OSCLI command: *UPCOMM.
+
+The syntax is:
+
+  *UPCOMM <ch> <cmd> <p1> <p2> <rql> <rqa> <rsa>
+
+Where:
+
+  <ch>: A single byte, giving the channel (should be zero)
+  <cmd>: A single byte, giving the command
+  <p1> & <p2>: The first and second parameter bytes
+  <rql>: The request length in bytes
+  <rqa>: The request address
+  <rsa>: The response address, or sideways RAM ID
+
+For example, there is a very simple command built into the disc-image server,
+which will give the sum, difference, product and quotient of two numbers. You
+can call it like this:
+
+  *UPCOMM 00 00 10 02 0000 0000 0900
+
+That will put &12 at &900, &0E at &901, &20 at &902 and &08 at &903. If instead
+of &900 you want to write the response to sideways RAM number 4, you can do:
+
+  *UPCOMM 00 00 10 02 0000 0000 R4
+
+The command-line parsing is completely brain-dead, so <ch>, <cmd>, <p1> & <p2>
+must all be exactly two hex digits, <rql> & <rqa> must be exactly four hex
+digits, and <rsa> must either be exactly four hex digits, or an 'R' followed by
+a single hex digit. All fields must be separated by exactly one space character.

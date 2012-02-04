@@ -1,0 +1,10 @@
+Since, amazingly enough, Martin Mathers' patched Acorn DFS ROM appears to have
+been developed on a BBC Micro, it's not easy to rebuild from source. Also, in
+the last 25 years or so I've become lazy to the point where trying to write any
+actual code using the BBC Micro's BASIC assembler hurts too much. So I took
+Martin's ROM image and knocked up a quick 6502 disassembler which had a bunch
+of MMBEEB labels hard-coded into it, so it would generate code that could be
+reassembled using the ACME cross-assembler[1]. I then used the output of this
+noddy disassembler as the basis for my work on udfs_rom.
+
+[1] http://www.esw-heim.tu-clausthal.de/~marco/smorbrod/acme/

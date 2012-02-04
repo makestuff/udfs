@@ -1,0 +1,20 @@
+On the host side, there is a small program which sits there waiting for
+arbitrary commands from the BBC on USB endpoint 4. When one arrives, it is
+processed, and a response sent back to the BBC via USB endpoint 2.
+
+Requests look like:
+
+  uint8 channel;
+  uint8 command;
+  uint8 param1;
+  uint8 param2;
+  uint16 dataLength;
+  uint8 data[dataLength];
+
+...and responses look like:
+
+  uint8 returnCode;
+  uint16 dataLength;
+  uint8 data[dataLength];
+
+The host side is just a switch statement on the channel and command bytes.

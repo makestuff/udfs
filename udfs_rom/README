@@ -1,0 +1,3 @@
+I took Martin Mathers' MMBEEB patched Acorn DFS v0.9 ROM and changed it so
+instead of reading disc image data from an MMC card, it would request bytes
+over USB from the disc image loaded into the "server" program on the host side.

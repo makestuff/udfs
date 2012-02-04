@@ -1,4 +1,4 @@
-	!to "dfs_rom.bin", plain	; set output file and format
+	!to "udfs_rom.bin", plain	; set output file and format
 
 	* = $8000
 	data_ptr = $a0

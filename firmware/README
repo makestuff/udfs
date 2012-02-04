@@ -1,0 +1,10 @@
+Firmware for the Minimus's AT90USB162, using Dean Camera's LUFA library to form
+a bridge between the host-side floppy disc "server" and the BBC's User Port.
+
+Basically the firmware just sits there waiting for commands from the BBC. When a
+command arrives, it is forwarded to the host on USB endpoint 4, and then waits
+for a response from the host on USB endpoint 2, which it forwards on to the BBC.
+
+Notice that there is no specific disc-oriented stuff here; the function of the
+firmware is just to send arbitrary commands to the host, and get arbitrary
+responses back.
