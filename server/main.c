@@ -172,7 +172,7 @@ int main(int argc, char *argv[]) {
 	for ( ; ; ) {
 		// Get request header
 		do {
-			uStatus = usbBulkRead(deviceHandle, 4, reqHeader.bytes, 6, 100, &error);
+			uStatus = usbBulkRead(deviceHandle, 4, reqHeader.bytes, 6, 60000, &error);
 		} while ( uStatus == USB_TIMEOUT );
 		CHECK_STATUS(uStatus, 6, cleanup);
 
@@ -188,7 +188,7 @@ int main(int argc, char *argv[]) {
 		executeRequest(&reqHeader.s, reqBuffer, &rspHeader.s, rspBuffer);
 
 		// Send response header
-		uStatus = usbBulkWrite(deviceHandle, 2, rspHeader.bytes, 3, 5000, &error);
+		uStatus = usbBulkWrite(deviceHandle, 2, rspHeader.bytes, 3, 60000, &error);
 		CHECK_STATUS(uStatus, 8, cleanup);
 
 		// Send response body
