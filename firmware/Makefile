@@ -59,7 +59,7 @@
 # To rebuild project do "make clean" then "make all".
 #----------------------------------------------------------------------------
 
-LUFA_VERSION=110528
+LUFA_VERSION=130901
 
 # MCU name
 MCU = at90usb162
@@ -123,6 +123,7 @@ LUFA_PATH = LUFA-$(LUFA_VERSION)
 
 # LUFA library compile-time options and predefined tokens
 LUFA_OPTS  = -D USB_DEVICE_ONLY
+LUFA_OPTS += -D ORDERED_EP_CONFIG
 LUFA_OPTS += -D FIXED_CONTROL_ENDPOINT_SIZE=8
 LUFA_OPTS += -D FIXED_NUM_CONFIGURATIONS=1
 LUFA_OPTS += -D USE_FLASH_DESCRIPTORS

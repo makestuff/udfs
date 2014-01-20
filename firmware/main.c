@@ -23,8 +23,10 @@
 #include <LUFA/Drivers/USB/USB.h>
 #include "makestuff.h"
 #include "desc.h"
+#include "usbio.h"
 
 // sudo minicom -b 115200 -D /dev/ttyS0 -o -w -8
+//#define DEBUG
 #define DEBUG_MASK 0x08
 #ifdef DEBUG
 #define BAUD 45
@@ -120,8 +122,6 @@ void usartSendFlashString(const char *str) {
 }
 #endif
 
-static uint8 recvBuf[64];
-static uint8 sendBuf[64];
 static uint8 channel;
 static uint8 command;
 static uint8 param1;
@@ -130,7 +130,6 @@ static union {
 	uint16 word;
 	uint8 bytes[2];
 } dataLength;
-static uint8 index;
 static enum {
 	GET_CHANNEL,      // fetch channel byte
 	GET_COMMAND,      // fetch command byte
@@ -228,22 +227,29 @@ void doMessaging(void) {
 		}
 		case GET_LENGTH_HIGH:{
 			dataLength.bytes[1] = ch = PIND;
-			index = 0;
-			Endpoint_SelectEndpoint(IN_ENDPOINT_ADDR);
-			Endpoint_WaitUntilReady();
-			Endpoint_Write_Stream_LE(&channel, 6, NULL);
-			Endpoint_ClearIN();
 			if ( dataLength.word ) {
 				state = GET_DATA;
 			} else {
 				state = SEND_PREP;
 			}
 			ackByte();
+			usbSelectEndpoint(IN_ENDPOINT_ADDR);
+			while ( !usbInPacketReady() );
+			usbPutByte(channel);
+			usbPutByte(command);
+			usbPutByte(param1);
+			usbPutByte(param2);
+			usbPutByte(dataLength.bytes[0]);
+			usbPutByte(dataLength.bytes[1]);
 			#ifdef DEBUG
 				usartSendByte('f');
 				usartSendByteHex(ch);
 				usartSendByte(',');
 			#endif
+			usbFlushPacket();  // send the request to the host
+			if ( dataLength.word ) {
+				while ( !usbInPacketReady() ); // wait for room for another packet
+			}
 			/*usartSendFlashString(PSTR("MSG("));
 			usartSendByteHex(channel);
 			usartSendByte(',');
@@ -259,36 +265,30 @@ void doMessaging(void) {
 			break;
 		}
 		case GET_DATA:{
-			recvBuf[index++] = ch = PIND;
+			ch = PIND;
 			dataLength.word--;
-			if ( !dataLength.word ) {
-				// last chunk...send what we have
-				Endpoint_SelectEndpoint(IN_ENDPOINT_ADDR);
-				Endpoint_WaitUntilReady();
-				Endpoint_Write_Stream_LE(recvBuf, index, NULL);
-				Endpoint_ClearIN();
-				state = SEND_PREP;
-			} else {
-				index &= 0x3F;
-				if ( !index ) {
-					// we filled a chunk...send it
-					Endpoint_SelectEndpoint(IN_ENDPOINT_ADDR);
-					Endpoint_WaitUntilReady();
-					Endpoint_Write_Stream_LE(recvBuf, 64, NULL);
-				}
+			if ( !usbReadWriteAllowed() ) {
+				usbFlushPacket();  // send a full packet
+				while ( !usbInPacketReady() );
 			}
-			ackByte();
+			usbPutByte(ch);
 			#ifdef DEBUG
 				usartSendByte('g');
 				usartSendByteHex(ch);
 				usartSendByte(',');
 			#endif
+			if ( !dataLength.word ) {
+				// last chunk
+				usbFlushPacket();  // send the last few bytes
+				state = SEND_PREP;
+			}
+			ackByte();
 			break;
 		}
 		case SEND_PREP:{
-			DDRD = 0xFF;
 			state = SEND_RETCODE;
-			ackByte();
+			ackByte();         // wait until the BBC has definitely stopped driving
+			DDRD = 0xFF;
 			#ifdef DEBUG
 				usartSendByte('h');
 				usartSendByte(',');
@@ -296,15 +296,13 @@ void doMessaging(void) {
 			break;
 		}
 		case SEND_RETCODE:{
-			Endpoint_SelectEndpoint(OUT_ENDPOINT_ADDR);
-			Endpoint_Read_Stream_LE(sendBuf, 3, NULL);
-			Endpoint_ClearOUT();
-			dataLength.bytes[0] = sendBuf[1];
-			dataLength.bytes[1] = sendBuf[2];
-			index = 0;
-			PORTD = ch = sendBuf[0];  // Return code
+			usbSelectEndpoint(OUT_ENDPOINT_ADDR);
+			while ( !usbOutPacketReady() );       // wait for a response from the host
+			PORTD = ch = usbRecvByte();           // return code
 			state = SEND_LENGTH_LOW;
 			ackByte();
+			dataLength.bytes[0] = usbRecvByte();  // length LSB
+			dataLength.bytes[1] = usbRecvByte();  // length MSB
 			#ifdef DEBUG
 				usartSendByte('i');
 				usartSendByteHex(ch);
@@ -324,7 +322,6 @@ void doMessaging(void) {
 			break;
 		}
 		case SEND_LENGTH_HIGH:{
-			index = 0;
 			PORTD = ch = dataLength.bytes[1];
 			if ( dataLength.word ) {
 				state = SEND_DATA;
@@ -340,21 +337,10 @@ void doMessaging(void) {
 			break;
 		}
 		case SEND_DATA:{
-			if ( index == 0 ) {
-				Endpoint_SelectEndpoint(OUT_ENDPOINT_ADDR);
-				if ( dataLength.word >= 64 ) {
-					Endpoint_Read_Stream_LE(sendBuf, 64, NULL);
-				} else {
-					Endpoint_Read_Stream_LE(sendBuf, dataLength.word, NULL);
-				}
-				Endpoint_ClearOUT();
-			}
-			PORTD = ch = sendBuf[index++];
+			PORTD = ch = usbRecvByte();
 			dataLength.word--;
 			if ( !dataLength.word ) {
 				state = FINISH;
-			} else {
-				index &= 0x3F;
 			}
 			ackByte();
 			#ifdef DEBUG
@@ -365,6 +351,7 @@ void doMessaging(void) {
 			break;
 		}
 		case FINISH:{
+			usbAckPacket();
 			DDRD = 0x00;
 			state = GET_CHANNEL;
 			ackByte();
@@ -415,20 +402,22 @@ void EVENT_USB_Device_Connect(void) {
 void EVENT_USB_Device_Disconnect(void) { }
 
 void EVENT_USB_Device_ConfigurationChanged(void) {
-	if ( !(Endpoint_ConfigureEndpoint(OUT_ENDPOINT_ADDR,
+	if ( !(Endpoint_ConfigureEndpoint(ENDPOINT_DIR_OUT | OUT_ENDPOINT_ADDR,
 	                                  EP_TYPE_BULK,
-	                                  ENDPOINT_DIR_OUT,
 	                                  ENDPOINT_SIZE,
-	                                  ENDPOINT_BANK_SINGLE)) )
+	                                  1)) )
 	{
-		// Failed to config OUT endpoint
+	#ifdef DEBUG
+		usartSendFlashString(PSTR("Failed to config OUT endpoint\r"));
+	#endif
 	}
-	if ( !(Endpoint_ConfigureEndpoint(IN_ENDPOINT_ADDR,
+	if ( !(Endpoint_ConfigureEndpoint(ENDPOINT_DIR_IN | IN_ENDPOINT_ADDR,
 	                                  EP_TYPE_BULK,
-	                                  ENDPOINT_DIR_IN,
 	                                  ENDPOINT_SIZE,
-	                                  ENDPOINT_BANK_SINGLE)) )
+	                                  1)) )
 	{
-		// Failed to config IN endpoint
+	#ifdef DEBUG
+		usartSendFlashString(PSTR("Failed to config IN endpoint\r"));
+	#endif
 	}
 }

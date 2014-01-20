@@ -16,7 +16,7 @@
  */
 #include "desc.h"
 
-static USBDeviceDescriptor PROGMEM deviceDescriptor = {
+const static USBDeviceDescriptor PROGMEM deviceDescriptor = {
 	.Header = {
 		.Size = sizeof(USBDeviceDescriptor),
 		.Type = DTYPE_Device
@@ -35,7 +35,7 @@ static USBDeviceDescriptor PROGMEM deviceDescriptor = {
 	.NumberOfConfigurations = FIXED_NUM_CONFIGURATIONS
 };
 
-static USBConfigurationDescriptor PROGMEM configurationDescriptor = {
+const static USBConfigurationDescriptor PROGMEM configurationDescriptor = {
 	.ConfigurationHeader = {
 		.Header = {
 			.Size = sizeof(USBConfigurationDescriptorHeader),
@@ -45,7 +45,7 @@ static USBConfigurationDescriptor PROGMEM configurationDescriptor = {
 		.TotalInterfaces = 1,
 		.ConfigurationNumber = 1,
 		.ConfigurationStrIndex = NO_DESCRIPTOR,
-		.ConfigAttributes = (USB_CONFIG_ATTR_BUSPOWERED | USB_CONFIG_ATTR_SELFPOWERED),
+		.ConfigAttributes = USB_CONFIG_ATTR_RESERVED,
 		.MaxPowerConsumption = USB_CONFIG_POWER_MA(100)
 	},
 	.Interface = {
@@ -66,7 +66,7 @@ static USBConfigurationDescriptor PROGMEM configurationDescriptor = {
 			.Size = sizeof(USBEndpointDescriptor),
 			.Type = DTYPE_Endpoint
 		},
-		.EndpointAddress = (ENDPOINT_DESCRIPTOR_DIR_IN | IN_ENDPOINT_ADDR),
+		.EndpointAddress = (ENDPOINT_DIR_IN | IN_ENDPOINT_ADDR),
 		.Attributes = (EP_TYPE_BULK | ENDPOINT_ATTR_NO_SYNC | ENDPOINT_USAGE_DATA),
 		.EndpointSize = ENDPOINT_SIZE,
 		.PollingIntervalMS = 0xFF
@@ -76,14 +76,14 @@ static USBConfigurationDescriptor PROGMEM configurationDescriptor = {
 			.Size = sizeof(USBEndpointDescriptor),
 			.Type = DTYPE_Endpoint
 		},
-		.EndpointAddress = (ENDPOINT_DESCRIPTOR_DIR_OUT | OUT_ENDPOINT_ADDR),
+		.EndpointAddress = (ENDPOINT_DIR_OUT | OUT_ENDPOINT_ADDR),
 		.Attributes = (EP_TYPE_BULK | ENDPOINT_ATTR_NO_SYNC | ENDPOINT_USAGE_DATA),
 		.EndpointSize = ENDPOINT_SIZE,
 		.PollingIntervalMS = 0xFF
 	}
 };
 
-static USBStringDescriptor PROGMEM languageString = {
+const static USBStringDescriptor PROGMEM languageString = {
 	.Header = {
 		.Size = USB_STRING_LEN(1),
 		.Type = DTYPE_String
@@ -91,7 +91,7 @@ static USBStringDescriptor PROGMEM languageString = {
 	.UnicodeString = {LANGUAGE_ID_ENG}
 };
 
-static USBStringDescriptor PROGMEM manufacturerString = {
+const static USBStringDescriptor PROGMEM manufacturerString = {
 	.Header = {
 		.Size = USB_STRING_LEN(18),
 		.Type = DTYPE_String
@@ -99,12 +99,12 @@ static USBStringDescriptor PROGMEM manufacturerString = {
 	.UnicodeString          = L"Swaton Electronics"
 };
 
-static USBStringDescriptor PROGMEM productString = {
+const static USBStringDescriptor PROGMEM productString = {
 	.Header = {
-		.Size = USB_STRING_LEN(17),
+		.Size = USB_STRING_LEN(24),
 		.Type = DTYPE_String
 	},
-	.UnicodeString          = L"NeroJTAG/AVR v1.0"
+	.UnicodeString          = L"BEEBUSB Disc Server v1.0"
 };
 
 uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue, const uint8_t wIndex, const void** const descriptorAddress) {

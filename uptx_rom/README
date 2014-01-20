@@ -29,3 +29,23 @@ The command-line parsing is completely brain-dead, so <ch>, <cmd>, <p1> & <p2>
 must all be exactly two hex digits, <rql> & <rqa> must be exactly four hex
 digits, and <rsa> must either be exactly four hex digits, or an 'R' followed by
 a single hex digit. All fields must be separated by exactly one space character.
+
+The transfer size can be large - you can load a 10KiB image into screen memory
+like this:
+
+  $ cd ../xbm2bbc/
+  $ make clean; make
+    :
+  $ lin.x64/rel/xbm2bbc
+  src - mary_bits = 10240
+  dst - convert = 10240
+  $ ls -la out.bin
+  -rw-r--r-- 1 chris users 10240 Jan 20 18:32 out.bin
+  $ cd ../server/
+  $ ln -s ../xbm2bbc/out.bin to_bbc.dat
+  $ ../server/lin.x64/rel/server -v 03eb:3002 snapper_v1.ssd
+
+...and on the BBC side:
+
+  10 MODE 4
+  20 *UPCOMM 00 02 00 00 0000 0000 5800

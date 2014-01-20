@@ -15,9 +15,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 #include <libusbwrap.h>
-#include <usb.h>
-#include <argtable2.h>
 #include <liberror.h>
+#include <argtable2.h>
 
 struct ReqHeader {
 	uint8 channel;
@@ -51,24 +50,26 @@ enum {
 
 uint8 diskImage[200*1024];
 
+#define U32MAX 0xFFFFFFFFU
+
 void executeRequest(const struct ReqHeader *reqHeader, const uint8 *reqBuffer, struct RspHeader *rspHeader, uint8 *rspBuffer) {
 	int i;
 	if ( reqHeader->channel == DEFAULT ) {
 		switch ( reqHeader->command ) {
 		case CALC:{
 			printf("CALC(0x%02X, 0x%02X)\n", reqHeader->param1, reqHeader->param2);
-			rspBuffer[0] = reqHeader->param1 + reqHeader->param2;
-			rspBuffer[1] = reqHeader->param1 - reqHeader->param2;
-			rspBuffer[2] = reqHeader->param1 * reqHeader->param2;
-			rspBuffer[3] = reqHeader->param1 / reqHeader->param2;
+			rspBuffer[0] = (uint8)(reqHeader->param1 + reqHeader->param2);
+			rspBuffer[1] = (uint8)(reqHeader->param1 - reqHeader->param2);
+			rspBuffer[2] = (uint8)(reqHeader->param1 * reqHeader->param2);
+			rspBuffer[3] = (uint8)(reqHeader->param1 / reqHeader->param2);
 			rspHeader->returnCode = RC_SUCCESS;
 			rspHeader->length = 4;
 			break;
 		}
 
 		case READ_BLOCK:{
-			int block = ((reqBuffer[1] & 0x03) << 8) | reqBuffer[0];
-			int numBytes = (reqBuffer[3] << 8) | reqBuffer[2];
+			uint16 block = (uint16)(((reqBuffer[1] & 0x03) << 8) | reqBuffer[0]);
+			uint16 numBytes = (uint16)((reqBuffer[3] << 8) | reqBuffer[2]);
 			const uint8 *src = diskImage + (256 * block);
 			uint8 *dst = rspBuffer;
 			printf("READ_BLOCK(0x%03X, 0x%04X)\n", block, numBytes);
@@ -90,7 +91,7 @@ void executeRequest(const struct ReqHeader *reqHeader, const uint8 *reqBuffer, s
 			fclose(file);
 			printf("RW_FILE(0x%04X from BBC, 0x%04zX to BBC)\n", reqHeader->length, fileLen);
 			rspHeader->returnCode = RC_SUCCESS;
-			rspHeader->length = fileLen;
+			rspHeader->length = (uint16)fileLen;
 			break;
 		}
 
@@ -114,7 +115,6 @@ void dumpSimple(const unsigned char *input, unsigned int length) {
 }
 
 int main(int argc, char *argv[]) {
-
 	struct arg_str *vpOpt  = arg_str1("v", "vidpid", "<VID:PID>", " vendor ID and product ID (e.g 04B4:8613)");
 	struct arg_file *fileOpt = arg_file1(NULL, NULL, "<disk.ssd>", "             the disk image to load\n");
 	struct arg_lit  *helpOpt = arg_lit0("h", "help", "             print this help and exit");
@@ -122,8 +122,9 @@ int main(int argc, char *argv[]) {
 	void* argTable[] = {helpOpt, vpOpt, fileOpt, endOpt};
 	const char *progName = "poll";
 	int numErrors;
-	struct usb_dev_handle *deviceHandle = NULL;
-	int returnCode = 0;
+	struct USBDevice *deviceHandle = NULL;
+	USBStatus uStatus;
+	int retVal = 0;
 	const char *error;
 	union {
 		struct ReqHeader s;
@@ -139,7 +140,7 @@ int main(int argc, char *argv[]) {
 
 	if ( arg_nullcheck(argTable) != 0 ) {
 		printf("%s: insufficient memory\n", progName);
-		FAIL(1);
+		FAIL(1, cleanup);
 	}
 
 	numErrors = arg_parse(argc, argv, argTable);
@@ -149,66 +150,62 @@ int main(int argc, char *argv[]) {
 		arg_print_syntax(stdout, argTable, "\n");
 		printf("\nServe a BBC Micro Disc Image.\n\n");
 		arg_print_glossary(stdout, argTable,"  %-10s %s\n");
-		FAIL(0);
+		FAIL(0, cleanup);
 	}
 
 	if ( numErrors > 0 ) {
 		arg_print_errors(stdout, endOpt, progName);
 		printf("Try '%s --help' for more information.\n", progName);
-		FAIL(2);
+		FAIL(2, cleanup);
 	}
 
 	file = fopen(fileOpt->filename[0], "rb");
 	fread(diskImage, 200*1024, 1, file);
 	fclose(file);
 
-	usbInitialise();
-	returnCode = usbOpenDeviceVP(vpOpt->sval[0], 1, 0, 0, &deviceHandle, &error);
-	if ( returnCode ) {
-		fprintf(stderr, "usbOpenDevice() failed: %s\n", error);
-		errFree(error);
-		FAIL(6);
-	}
+	uStatus = usbInitialise(0, &error);
+	CHECK_STATUS(uStatus, 3, cleanup);
+
+	uStatus = usbOpenDevice(vpOpt->sval[0], 1, 0, 0, &deviceHandle, &error);
+	CHECK_STATUS(uStatus, 4, cleanup);
+
 	for ( ; ; ) {
 		// Get request header
 		do {
-			returnCode = usb_bulk_read(deviceHandle, USB_ENDPOINT_IN | 4, (char*)reqHeader.bytes, 6, 100);
-		} while ( returnCode < 0 );
-		if ( returnCode != 6 ) {
-			printf("Expected to read six bytes but actually read %d: %s\n", returnCode, usb_strerror());
-			FAIL(7);
-		}
+			uStatus = usbBulkRead(deviceHandle, 4, reqHeader.bytes, 6, 100, &error);
+		} while ( uStatus == USB_TIMEOUT );
+		CHECK_STATUS(uStatus, 6, cleanup);
 
 		// Get request body
 		if ( reqHeader.s.length ) {
 			do {
-				returnCode = usb_bulk_read(deviceHandle, USB_ENDPOINT_IN | 4, (char*)reqBuffer, reqHeader.s.length, 60000);
-			} while ( returnCode < 0 );
-			if ( returnCode != reqHeader.s.length ) {
-				printf("Expected to read %d bytes but actually read %d: %s\n", reqHeader.s.length, returnCode, usb_strerror());
-				FAIL(7);
-			}
+				uStatus = usbBulkRead(deviceHandle, 4, reqBuffer, reqHeader.s.length, 60000, &error);
+			} while ( uStatus == USB_TIMEOUT );
+			CHECK_STATUS(uStatus, 7, cleanup);
 		}
+
 		// Execute the incoming request
 		executeRequest(&reqHeader.s, reqBuffer, &rspHeader.s, rspBuffer);
 
 		// Send response header
-		returnCode = usb_bulk_write(deviceHandle, USB_ENDPOINT_OUT | 2, (char*)rspHeader.bytes, 3, 5000);
+		uStatus = usbBulkWrite(deviceHandle, 2, rspHeader.bytes, 3, 5000, &error);
+		CHECK_STATUS(uStatus, 8, cleanup);
 
 		// Send response body
 		if ( rspHeader.s.length ) {
-			//printf("About to write %X bytes...\n", rspHeader.s.length);
-			returnCode = usb_bulk_write(deviceHandle, USB_ENDPOINT_OUT | 2, (char*)rspBuffer, rspHeader.s.length, 60000);
-			//printf("Write completed returnCode %d\n", returnCode);
+			uStatus = usbBulkWrite(deviceHandle, 2, rspBuffer, rspHeader.s.length, 60000, &error);
+			CHECK_STATUS(uStatus, 9, cleanup);
 		}
 	}
 
 cleanup:
+	if ( error ) {
+		fprintf(stderr, "%s\n", error);
+		errFree(error);
+	}
 	if ( deviceHandle ) {
-		usb_release_interface(deviceHandle, 0);
-		usb_close(deviceHandle);
+		usbCloseDevice(deviceHandle, 0);
 	}
 	arg_freetable(argTable, sizeof(argTable)/sizeof(argTable[0]));
-
-	return returnCode;
+	return retVal;
 }

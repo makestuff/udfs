@@ -51,8 +51,8 @@ int main(void) {
 		}
 		src += 7*40;
 	}
-	printf("src - mary_bits = %d\n", src - mary_bits);
-	printf("dst - convert = %d\n", dst - convert);
+	printf("src - mary_bits = %zd\n", src - mary_bits);
+	printf("dst - convert = %zd\n", dst - convert);
 	fwrite(convert, 1, 10240, file);
 	fclose(file);
 }
