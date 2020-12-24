@@ -979,7 +979,8 @@ void freeFile(uint8 *buffer) {
 
 int main(void) {
   const uint8 *data = loadFile("SUPERMMC.rom");
-  struct Context cxt = {data, 0, 0, {0,}, {0,}};
+  struct Context cxt = {0, 0, 0, {0,}, {0,}};
+  cxt.data = data;
   if (!data) {
     fprintf(stderr, "Cannot find SUPERMMC.rom!\n");
     return 1;

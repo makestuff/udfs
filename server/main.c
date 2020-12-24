@@ -125,7 +125,7 @@ int main(int argc, char *argv[]) {
 	struct USBDevice *deviceHandle = NULL;
 	USBStatus uStatus;
 	int retVal = 0;
-	const char *error;
+	const char *error = NULL;
 	union {
 		struct ReqHeader s;
 		uint8 bytes[6];

@@ -3,8 +3,7 @@ The UDFS is a patched Acorn DFS ROM (based heavily on Martin Mather's patches fo
 
 This repository uses git submodules, so you'll need to do a recursive clone:
 
-    git clone --recursive http://github.com/makestuff/udfs.bit
-
+    git clone --recursive https://github.com/makestuff/udfs
 
 ## TODO
 * BBC cannot save data to disk images yet.
