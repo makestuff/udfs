@@ -17,8 +17,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <makestuff.h>
-#include <libbuffer.h>
+#include <makestuff/common.h>
+#include <makestuff/libbuffer.h>
 
 struct Context {
 	const uint8 *data;
@@ -978,16 +978,20 @@ void freeFile(uint8 *buffer) {
 }
 
 int main(void) {
-	const char *error = NULL;
-	const uint8 *data = loadFile("SUPERMMC.rom");
-	struct Context cxt = {data, 0, 0, {0,}, {0,}};
-	loadSymbols(&cxt); //, "foo.sym");
-	printf("\t!to \"foo.o\", plain\t; set output file and format\n\n");
-	dumpSymbols(&cxt);
-	initMap(&cxt);
-	while ( cxt.index < 0x4000 ) {
-		d6502(&cxt);
-	}
+  const uint8 *data = loadFile("SUPERMMC.rom");
+  struct Context cxt = {data, 0, 0, {0,}, {0,}};
+  if (!data) {
+    fprintf(stderr, "Cannot find SUPERMMC.rom!\n");
+    return 1;
+  }
+  loadSymbols(&cxt); //, "foo.sym");
+  printf("\t!to \"foo.o\", plain\t; set output file and format\n\n");
+  dumpSymbols(&cxt);
+  initMap(&cxt);
+  while ( cxt.index < 0x4000 ) {
+    d6502(&cxt);
+  }
+  return 0;
 }
 
 /*

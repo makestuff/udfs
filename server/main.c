@@ -14,9 +14,9 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#include <libusbwrap.h>
-#include <liberror.h>
-#include <argtable2.h>
+#include <makestuff/libusbwrap.h>
+#include <makestuff/liberror.h>
+#include <sheitmann/libargtable2.h>
 
 struct ReqHeader {
 	uint8 channel;
@@ -140,7 +140,7 @@ int main(int argc, char *argv[]) {
 
 	if ( arg_nullcheck(argTable) != 0 ) {
 		printf("%s: insufficient memory\n", progName);
-		FAIL(1, cleanup);
+		FAIL_RET(1, cleanup);
 	}
 
 	numErrors = arg_parse(argc, argv, argTable);
@@ -150,13 +150,13 @@ int main(int argc, char *argv[]) {
 		arg_print_syntax(stdout, argTable, "\n");
 		printf("\nServe a BBC Micro Disc Image.\n\n");
 		arg_print_glossary(stdout, argTable,"  %-10s %s\n");
-		FAIL(0, cleanup);
+		FAIL_RET(0, cleanup);
 	}
 
 	if ( numErrors > 0 ) {
 		arg_print_errors(stdout, endOpt, progName);
 		printf("Try '%s --help' for more information.\n", progName);
-		FAIL(2, cleanup);
+		FAIL_RET(2, cleanup);
 	}
 
 	file = fopen(fileOpt->filename[0], "rb");

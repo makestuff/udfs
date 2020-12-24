@@ -16,12 +16,12 @@
  */
 #include "desc.h"
 
-const static USBDeviceDescriptor PROGMEM deviceDescriptor = {
+static const USBDeviceDescriptor PROGMEM deviceDescriptor = {
 	.Header = {
 		.Size = sizeof(USBDeviceDescriptor),
 		.Type = DTYPE_Device
 	},
-	.USBSpecification = VERSION_BCD(01.10),
+	.USBSpecification = VERSION_BCD(1,1,0),
 	.Class = 0xff,
 	.SubClass = 0xff,
 	.Protocol = 0xff,
@@ -35,7 +35,7 @@ const static USBDeviceDescriptor PROGMEM deviceDescriptor = {
 	.NumberOfConfigurations = FIXED_NUM_CONFIGURATIONS
 };
 
-const static USBConfigurationDescriptor PROGMEM configurationDescriptor = {
+static const USBConfigurationDescriptor PROGMEM configurationDescriptor = {
 	.ConfigurationHeader = {
 		.Header = {
 			.Size = sizeof(USBConfigurationDescriptorHeader),
@@ -83,7 +83,7 @@ const static USBConfigurationDescriptor PROGMEM configurationDescriptor = {
 	}
 };
 
-const static USBStringDescriptor PROGMEM languageString = {
+static const USBStringDescriptor PROGMEM languageString = {
 	.Header = {
 		.Size = USB_STRING_LEN(1),
 		.Type = DTYPE_String
@@ -91,7 +91,7 @@ const static USBStringDescriptor PROGMEM languageString = {
 	.UnicodeString = {LANGUAGE_ID_ENG}
 };
 
-const static USBStringDescriptor PROGMEM manufacturerString = {
+static const USBStringDescriptor PROGMEM manufacturerString = {
 	.Header = {
 		.Size = USB_STRING_LEN(18),
 		.Type = DTYPE_String
@@ -99,7 +99,7 @@ const static USBStringDescriptor PROGMEM manufacturerString = {
 	.UnicodeString          = L"Swaton Electronics"
 };
 
-const static USBStringDescriptor PROGMEM productString = {
+static const USBStringDescriptor PROGMEM productString = {
 	.Header = {
 		.Size = USB_STRING_LEN(24),
 		.Type = DTYPE_String
@@ -107,7 +107,9 @@ const static USBStringDescriptor PROGMEM productString = {
 	.UnicodeString          = L"BEEBUSB Disc Server v1.0"
 };
 
-uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue, const uint8_t wIndex, const void** const descriptorAddress) {
+uint16_t CALLBACK_USB_GetDescriptor(
+	const uint16_t wValue, const uint16_t wIndex, const void** const descriptorAddress)
+{
 	const uint8_t descriptorType = (wValue >> 8);
 	const uint8_t descriptorNumber = (wValue & 0xFF);
 
@@ -143,4 +145,5 @@ uint16_t CALLBACK_USB_GetDescriptor(const uint16_t wValue, const uint8_t wIndex,
 	
 	*descriptorAddress = address;		
 	return size;
+	(void)wIndex;
 }

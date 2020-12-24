@@ -7,4 +7,17 @@ of MMBEEB labels hard-coded into it, so it would generate code that could be
 reassembled using the ACME cross-assembler[1]. I then used the output of this
 noddy disassembler as the basis for my work on udfs_rom.
 
+# Disassemble SUPERMMC.rom
+cd ../mmbeeb
+../install/bin/d6502 > SUPERMMC.s
+
+# Install ACME assembler
+sudo apt-get install acme
+
+# Use ACME to assemble the output of d6502
+acme SUPERMMC.s
+
+# Compare output with the original, verify bitwise-identical
+cmp foo.o SUPERMMC.rom
+
 [1] http://www.esw-heim.tu-clausthal.de/~marco/smorbrod/acme/

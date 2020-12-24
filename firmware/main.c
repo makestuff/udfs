@@ -21,7 +21,7 @@
 #include <string.h>
 #include <LUFA/Version.h>
 #include <LUFA/Drivers/USB/USB.h>
-#include "makestuff.h"
+//#include "makestuff/common.h"
 #include "desc.h"
 #include "usbio.h"
 
@@ -30,9 +30,9 @@
 #define DEBUG_MASK 0x08
 #ifdef DEBUG
 #define BAUD 45
-void usartSendByte(uint8 byte) {
-	const uint8 hi = PORTB | DEBUG_MASK;
-	const uint8 lo = PORTB & (~DEBUG_MASK);
+void usartSendByte(uint8_t byte) {
+	const uint8_t hi = PORTB | DEBUG_MASK;
+	const uint8_t lo = PORTB & (~DEBUG_MASK);
 	cli();
 	PORTB = lo;
 	_delay_loop_1(BAUD);
@@ -56,8 +56,8 @@ void usartSendByte(uint8 byte) {
 	_delay_loop_1(BAUD);
 	sei();
 }
-void usartSendByteHex(uint8 byte) {
-	uint8 ch;
+void usartSendByteHex(uint8_t byte) {
+	uint8_t ch;
 	ch = (byte >> 4) & 0x0F;
 	ch += (ch < 10 ) ? '0' : 'A' - 10;
 	usartSendByte(ch);
@@ -65,8 +65,8 @@ void usartSendByteHex(uint8 byte) {
 	ch += (ch < 10 ) ? '0' : 'A' - 10;
 	usartSendByte(ch);
 }
-void usartSendWordHex(uint16 word) {
-	uint8 ch;
+void usartSendWordHex(uint16_t word) {
+	uint8_t ch;
 	ch = (word >> 12) & 0x0F;
 	ch += (ch < 10 ) ? '0' : 'A' - 10;
 	usartSendByte(ch);
@@ -80,8 +80,8 @@ void usartSendWordHex(uint16 word) {
 	ch += (ch < 10 ) ? '0' : 'A' - 10;
 	usartSendByte(ch);
 }
-void usartSendLongHex(uint32 word) {
-	uint8 ch;
+void usartSendLongHex(uint32_t word) {
+	uint8_t ch;
 	ch = (word >> 28) & 0x0F;
 	ch += (ch < 10 ) ? '0' : 'A' - 10;
 	usartSendByte(ch);
@@ -122,13 +122,13 @@ void usartSendFlashString(const char *str) {
 }
 #endif
 
-static uint8 channel;
-static uint8 command;
-static uint8 param1;
-static uint8 param2;
+static uint8_t channel;
+static uint8_t command;
+static uint8_t param1;
+static uint8_t param2;
 static union {
-	uint16 word;
-	uint8 bytes[2];
+	uint16_t word;
+	uint8_t bytes[2];
 } dataLength;
 static enum {
 	GET_CHANNEL,      // fetch channel byte
@@ -165,7 +165,7 @@ static void ackByte(void) {
 }
 
 void doMessaging(void) {
-	uint8 ch;
+	uint8_t ch;
 	if ( PINC & 0x04 ) {
 		return;  // nothing to do
 	}

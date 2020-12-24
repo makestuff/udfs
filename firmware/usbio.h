@@ -18,7 +18,7 @@
 #define USBIO_H
 
 // Select a different endpoint.
-static inline void usbSelectEndpoint(uint8 epNum) {
+static inline void usbSelectEndpoint(uint8_t epNum) {
 	UENUM = epNum;
 }
 
@@ -48,17 +48,17 @@ static inline bool usbReadWriteAllowed(void) {
 }
 
 // Get the next byte from the OUT buffer.
-static inline uint8 usbGetByte(void) {
+static inline uint8_t usbGetByte(void) {
 	return UEDATX;
 }
 
 // Put another byte in the IN buffer.
-static inline void usbPutByte(uint8 byte) {
+static inline void usbPutByte(uint8_t byte) {
 	UEDATX = byte;
 }
 
 // Get another OUT byte, acknowledging this packet and waiting for another, if necessary.
-static inline uint8 usbRecvByte(void) {
+static inline uint8_t usbRecvByte(void) {
 	while ( !usbReadWriteAllowed() ) {
 		usbAckPacket();
 		while ( !usbOutPacketReady() );
@@ -67,7 +67,7 @@ static inline uint8 usbRecvByte(void) {
 }
 
 // Flush the current IN packet if necessary, then put a byte in the IN buffer.
-static inline void usbSendByte(uint8 byte) {
+static inline void usbSendByte(uint8_t byte) {
 	if ( !usbReadWriteAllowed() ) {
 		usbFlushPacket();
 		while ( !usbInPacketReady() );
