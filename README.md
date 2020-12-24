@@ -12,7 +12,7 @@ This repository uses git submodules, so you'll need to do a recursive clone:
 
 
 ## SOFTWARE
-You'll need CMake and a suitable compiler (GCC on Linux, MSVC on Windows) to build the code. For the 6502 code you'll need [ACME](http://www.esw-heim.tu-clausthal.de/~marco/smorbrod/acme), and for the AVR code you'll need AVR-GCC.
+You'll need CMake and a suitable compiler (GCC on Linux, MSVC on Windows) to build the code. For the 6502 code you'll need [ACME](https://sourceforge.net/projects/acme-crossass), and for the AVR code you'll need AVR-GCC.
 
 To build the host-side software, just run `build.sh` (or `build.cmd` on Windows), which will build the `server` directory and all its dependencies:
 
