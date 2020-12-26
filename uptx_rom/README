@@ -14,7 +14,7 @@ Where:
   <rqa>: The request address
   <rsa>: The response address, or sideways RAM ID
 
-For example, there is a very simple command built into the disc-image server,
+For example, there is a very simple command built into the disk-image server,
 which will give the sum, difference, product and quotient of two numbers. You
 can call it like this:
 

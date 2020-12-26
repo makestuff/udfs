@@ -1,4 +1,4 @@
-# BBC MICRO USB DISC FILING SYSTEM
+# BBC MICRO USB DISK FILING SYSTEM
 The UDFS is a patched Acorn DFS ROM (based heavily on Martin Mather's patches for his MMBEEB project), which allows a "real" BBC Micro to "mount" disk images stored on a host computer (Windows, MacOSX, Linux) using a cheap USB cable.
 
 This repository uses git submodules, so you'll need to do a recursive clone:
@@ -7,7 +7,7 @@ This repository uses git submodules, so you'll need to do a recursive clone:
 
 ## TODO
 * BBC cannot save data to disk images yet.
-* Perhaps the choice of disc image should be made by the BBC?
+* Perhaps the choice of disk image should be made by the BBC?
 
 
 ## SOFTWARE
@@ -74,7 +74,7 @@ You then need a 20-pin IDC connector and a short (~30cm) length of ribbon cable,
     
     * Put a 10uF tantalum capacitor between VCC and GND
 
-You need to write the `udfs_rom.bin` image to a suitable EPROM and install it in your BBC Micro. You then need to program the AT90USB162 in your Minimus board with the supplied firmware. Finally, with the cable installed in your BBC's user port and your PC's USB port, you should be able to mount a disc image:
+You need to write the `udfs_rom.bin` image to a suitable EPROM and install it in your BBC Micro. You then need to program the AT90USB162 in your Minimus board with the supplied firmware. Finally, with the cable installed in your BBC's user port and your PC's USB port, you should be able to mount a disk image:
 
     sudo install/bin/server -v 03eb:3002 ../images/elite_a.ssd
 
