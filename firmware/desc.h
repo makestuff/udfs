@@ -27,10 +27,10 @@ typedef USB_Descriptor_Interface_t USBInterfaceDescriptor;
 typedef USB_Descriptor_Endpoint_t USBEndpointDescriptor;
 
 typedef struct {
-	USBConfigurationDescriptorHeader ConfigurationHeader;
-	USBInterfaceDescriptor           Interface;
-	USBEndpointDescriptor            InEndpoint;
-	USBEndpointDescriptor            OutEndpoint;
+  USBConfigurationDescriptorHeader ConfigurationHeader;
+  USBInterfaceDescriptor           Interface;
+  USBEndpointDescriptor            InEndpoint;
+  USBEndpointDescriptor            OutEndpoint;
 } USBConfigurationDescriptor;
 
 #define OUT_ENDPOINT_ADDR 2

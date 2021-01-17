@@ -19,60 +19,60 @@
 
 // Select a different endpoint.
 static inline void usbSelectEndpoint(uint8_t epNum) {
-	UENUM = epNum;
+  UENUM = epNum;
 }
 
 // Check if the selected OUT endpoint has received a packet.
 static inline bool usbOutPacketReady(void) {
-	return ((UEINTX & (1 << RXOUTI)) ? true : false);
+  return ((UEINTX & (1 << RXOUTI)) ? true : false);
 }
 
 // Check if the selected IN endpoint is ready for another packet.
 static inline bool usbInPacketReady(void) {
-	return ((UEINTX & (1 << TXINI)) ? true : false);
+  return ((UEINTX & (1 << TXINI)) ? true : false);
 }
 
 // Acknowledge this OUT packet, making room for another.
 static inline void usbAckPacket(void) {
-	UEINTX &= ~((1 << RXOUTI) | (1 << FIFOCON));
+  UEINTX &= ~((1 << RXOUTI) | (1 << FIFOCON));
 }
 
 // Send the current IN packet to the host.
 static inline void usbFlushPacket(void) {
-	UEINTX &= ~((1 << TXINI) | (1 << FIFOCON));
+  UEINTX &= ~((1 << TXINI) | (1 << FIFOCON));
 }
 
 // Is there space in the IN buffer, or bytes in the OUT buffer?
 static inline bool usbReadWriteAllowed(void) {
-	return ((UEINTX & (1 << RWAL)) ? true : false);
+  return ((UEINTX & (1 << RWAL)) ? true : false);
 }
 
 // Get the next byte from the OUT buffer.
 static inline uint8_t usbGetByte(void) {
-	return UEDATX;
+  return UEDATX;
 }
 
 // Put another byte in the IN buffer.
 static inline void usbPutByte(uint8_t byte) {
-	UEDATX = byte;
+  UEDATX = byte;
 }
 
 // Get another OUT byte, acknowledging this packet and waiting for another, if necessary.
 static inline uint8_t usbRecvByte(void) {
-	while ( !usbReadWriteAllowed() ) {
-		usbAckPacket();
-		while ( !usbOutPacketReady() );
-	}
-	return usbGetByte();
+  while (!usbReadWriteAllowed()) {
+    usbAckPacket();
+    while (!usbOutPacketReady());
+  }
+  return usbGetByte();
 }
 
 // Flush the current IN packet if necessary, then put a byte in the IN buffer.
 static inline void usbSendByte(uint8_t byte) {
-	if ( !usbReadWriteAllowed() ) {
-		usbFlushPacket();
-		while ( !usbInPacketReady() );
-	}
-	usbPutByte(byte);
+  if (!usbReadWriteAllowed()) {
+    usbFlushPacket();
+    while (!usbInPacketReady());
+  }
+  usbPutByte(byte);
 }
 
 #endif

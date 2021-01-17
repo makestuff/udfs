@@ -76,6 +76,6 @@ You then need a 20-pin IDC connector and a short (~30cm) length of ribbon cable,
 
 You need to write the `udfs_rom.bin` image to a suitable EPROM and install it in your BBC Micro. You then need to program the AT90USB162 in your Minimus board with the supplied firmware. Finally, with the cable installed in your BBC's user port and your PC's USB port, you should be able to mount a disk image:
 
-    sudo install/bin/server -v 03eb:3002 ../images/elite_a.ssd
+    sudo udfs-server -v 03eb:3002 ../images/elite_a.ssd
 
 Hit Shift-Break on the BBC and you're away!
